@@ -48,7 +48,7 @@ resource "aws_route_table_association" "a-rtb" {
 }
 
 
-resource "aws_security_group" "example" {
+resource "aws_security_group" "project-sg" {
   name = "project-sg"
   vpc_id = aws_vpc.project_vpc.id
 
@@ -90,7 +90,19 @@ data "aws_ami" "latest-amazon-linux-image" {
 }
 
 resource "aws_instance" "project-server" {
-  ami = data.aws_ami.latest-amazon-linux-image.id
+    ami = data.aws_ami.latest-amazon-linux-image.id
+    instance_type = "t2.micro"
+
+    subnet_id = aws_subnet.project_subnet.id
+    vpc_security_group_ids = [aws_security_group.project-sg.id]
+    availability_zone = "eu-west-3a"
+
+    associate_public_ip_address = true
+
+    tags = {
+      Name = "lamp1-server"
+    }
+
 }
 
 
