@@ -80,9 +80,18 @@ resource "aws_security_group" "example" {
 }
 
 
+data "aws_ami" "latest-amazon-linux-image" {
+    most_recent = true
+    owners = ["amazon"]
+    filter {
+      name = "name"
+      values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    }
+}
 
-
-
+resource "aws_instance" "project-server" {
+  ami = data.aws_ami.latest-amazon-linux-image.id
+}
 
 
 
