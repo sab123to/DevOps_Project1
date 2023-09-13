@@ -1,10 +1,20 @@
 provider "aws" {
-    region = "eu-west-3"
+    region = "eu-west-2"
 }
+
+variable public_key_location {}
+variable instance_type {}
+variable avail_zone {}
+variable subnet_cidr_block {}
+variable vpc_cidr_block {}
+variable local_ip_addr {}
+
+
+
 
 
 resource "aws_vpc" "project_vpc" {
-    cidr_block  = "10.0.0.0/16"
+    cidr_block  = var.vpc_cidr_block
     tags = {
       Name: "lamp-vpc"
     }
@@ -13,8 +23,8 @@ resource "aws_vpc" "project_vpc" {
 
 resource "aws_subnet" "project_subnet" {
     vpc_id               = aws_vpc.project_vpc.id
-    cidr_block           = "10.0.10.0/24"
-    availability_zone    = "eu-west-3a"
+    cidr_block           = var.subnet_cidr_block
+    availability_zone    = var.avail_zone
     tags = {
       Name: "lamp-subnet"
     }
@@ -56,7 +66,7 @@ resource "aws_security_group" "project-sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.local_ip_addr]
   }
 
   ingress {
@@ -85,19 +95,29 @@ data "aws_ami" "latest-amazon-linux-image" {
     owners = ["amazon"]
     filter {
       name = "name"
-      values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+      values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20230516"]
     }
+    filter {
+          name = "image-id"
+          values = ["ami-0eb260c4d5475b901"]
+        }
+    
 }
 
+resource "aws_key_pair" "ssh-key" {
+    key_name = "project-key"
+    public_key = file(var.public_key_location)
+}
+
+
 resource "aws_instance" "project-server" {
-    ami = data.aws_ami.latest-amazon-linux-image.id
-    instance_type = "t2.micro"
-
-    subnet_id = aws_subnet.project_subnet.id
-    vpc_security_group_ids = [aws_security_group.project-sg.id]
-    availability_zone = "eu-west-3a"
-
-    associate_public_ip_address = true
+    ami                           = data.aws_ami.latest-amazon-linux-image.id
+    instance_type                 = var.instance_type
+    key_name                      = aws_key_pair.ssh-key.key_name
+    associate_public_ip_address   = true
+    subnet_id                     = aws_subnet.project_subnet.id
+    vpc_security_group_ids        = [aws_security_group.project-sg.id]
+    availability_zone             = var.avail_zone
 
     tags = {
       Name = "lamp1-server"
@@ -105,5 +125,32 @@ resource "aws_instance" "project-server" {
 
 }
 
+resource "aws_instance" "project-server2" {
+    ami                           = data.aws_ami.latest-amazon-linux-image.id
+    instance_type                 = var.instance_type
+    key_name                      = aws_key_pair.ssh-key.key_name
+    associate_public_ip_address   = true
+    subnet_id                     = aws_subnet.project_subnet.id
+    vpc_security_group_ids        = [aws_security_group.project-sg.id]
+    availability_zone             = var.avail_zone
 
+    tags = {
+      Name = "lamp2-server"
+    }
 
+}
+
+resource "aws_instance" "project-server3" {
+    ami                           = data.aws_ami.latest-amazon-linux-image.id
+    instance_type                 = var.instance_type
+    key_name                      = aws_key_pair.ssh-key.key_name
+    associate_public_ip_address   = true
+    subnet_id                     = aws_subnet.project_subnet.id
+    vpc_security_group_ids        = [aws_security_group.project-sg.id]
+    availability_zone             = var.avail_zone
+
+    tags = {
+      Name = "nginx-server"
+    }
+
+}
