@@ -2,15 +2,6 @@ provider "aws" {
     region = "eu-west-2"
 }
 
-variable public_key_location {}
-variable instance_type {}
-variable avail_zone {}
-variable subnet_cidr_block {}
-variable vpc_cidr_block {}
-variable local_ip_addr {}
-
-
-
 
 
 resource "aws_vpc" "project_vpc" {
@@ -21,40 +12,11 @@ resource "aws_vpc" "project_vpc" {
 }
 
 
-resource "aws_subnet" "project_subnet" {
-    vpc_id               = aws_vpc.project_vpc.id
-    cidr_block           = var.subnet_cidr_block
-    availability_zone    = var.avail_zone
-    tags = {
-      Name: "lamp-subnet"
-    }
-}
-
-
-resource "aws_route_table" "project-route-table" {
-  vpc_id = aws_vpc.project_vpc.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.project-internet_gateway.id
-  }
-  tags = {
-    Name: "project-rtb"
-  }
-}
-
-
-resource "aws_internet_gateway" "project-internet_gateway" {
-  vpc_id = aws_vpc.project_vpc.id
-  tags = {
-    Name: "project-igw"
-  }
-}
-
-
-resource "aws_route_table_association" "a-rtb" {
-  subnet_id = aws_subnet.project_subnet.id
-  route_table_id = aws_route_table.project-route-table.id
+module "my-project-subnet" {
+    source = "./modules/subnet"
+    subnet_cidr_block = var.subnet_cidr_block
+    avail_zone = var.avail_zone
+    vpc_id = aws_vpc.project_vpc.id
 }
 
 
@@ -115,7 +77,7 @@ resource "aws_instance" "project-server" {
     instance_type                 = var.instance_type
     key_name                      = aws_key_pair.ssh-key.key_name
     associate_public_ip_address   = true
-    subnet_id                     = aws_subnet.project_subnet.id
+    subnet_id                     = module.my-project-subnet.subnet.id
     vpc_security_group_ids        = [aws_security_group.project-sg.id]
     availability_zone             = var.avail_zone
 
@@ -130,7 +92,7 @@ resource "aws_instance" "project-server2" {
     instance_type                 = var.instance_type
     key_name                      = aws_key_pair.ssh-key.key_name
     associate_public_ip_address   = true
-    subnet_id                     = aws_subnet.project_subnet.id
+    subnet_id                     = module.my-project-subnet.subnet.id
     vpc_security_group_ids        = [aws_security_group.project-sg.id]
     availability_zone             = var.avail_zone
 
@@ -145,7 +107,7 @@ resource "aws_instance" "project-server3" {
     instance_type                 = var.instance_type
     key_name                      = aws_key_pair.ssh-key.key_name
     associate_public_ip_address   = true
-    subnet_id                     = aws_subnet.project_subnet.id
+    subnet_id                     = module.my-project-subnet.subnet.id
     vpc_security_group_ids        = [aws_security_group.project-sg.id]
     availability_zone             = var.avail_zone
 
