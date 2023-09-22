@@ -1,13 +1,3 @@
-# ec2 servers and subnet component variables
-variable public_key_location {}
-variable instance_type {}
-variable avail_zone {}
-variable subnet_cidr_block {}
-variable vpc_cidr_block {}
-variable local_ip_addr {}
-
-
-# eks infrastructure variables
 variable eks_vpc_id {}
 variable eks_vpc_cidr_block {}
 variable eks_subnet_cidr_block_priv1 {}

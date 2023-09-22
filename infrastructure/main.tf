@@ -1,15 +1,15 @@
 provider "aws" {
     region = "eu-west-2"
 }
-
-
-
+ 
 resource "aws_vpc" "project_vpc" {
     cidr_block  = var.vpc_cidr_block
     tags = {
       Name: "lamp-vpc"
     }
 }
+
+
 
 
 module "my-project-subnet" {
@@ -29,3 +29,18 @@ module "my-project-servers" {
     instance_type         = var.instance_type 
     avail_zone            = var.avail_zone
 }
+
+module "my-project-eks" {
+     source                      = "./modules/eks-module"
+     eks_vpc_id                  = var.eks_vpc_id
+     eks_vpc_cidr_block          = var.eks_vpc_cidr_block
+     eks_subnet_cidr_block_priv1 = var.eks_subnet_cidr_block_priv1
+     eks_subnet_cidr_block_priv2 = var.eks_subnet_cidr_block_priv2
+     eks_subnet_cidr_block_pub1  = var.eks_subnet_cidr_block_pub1
+     eks_subnet_cidr_block_pub2  = var.eks_subnet_cidr_block_pub2
+     eks_subnet_avail_zone_priv1 = var.eks_subnet_avail_zone_priv1
+     eks_subnet_avail_zone_priv2 = var.eks_subnet_avail_zone_priv2
+     eks_subnet_avail_zone_pub1  = var.eks_subnet_avail_zone_pub1
+     eks_subnet_avail_zone_pub2  = var.eks_subnet_avail_zone_pub2
+}
+
