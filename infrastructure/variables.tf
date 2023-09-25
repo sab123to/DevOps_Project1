@@ -5,7 +5,7 @@ variable avail_zone {}
 variable subnet_cidr_block {}
 variable vpc_cidr_block {}
 variable local_ip_addr {}
-
+variable vpc_id {}
 
 # eks infrastructure variables
 variable eks_vpc_id {}
