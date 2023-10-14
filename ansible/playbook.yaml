@@ -1,0 +1,71 @@
+---
+- name: Configure Apache
+  hosts: localhost
+  become: true 
+
+  tasks:
+  - name: Update cache
+    apt:
+      update_cache: yes
+
+  - name: install apache
+    apt:
+      name: apache2
+      state: latest
+
+- name: Generate self-signed SSL/TLS certificate
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+  - name: generate a private key
+    openssl_privatekey:
+      path: /etc/ssl/private/apache-server.key
+      type: RSA
+      size: 2048
+  
+  
+  - name: Generate SSL certificate request
+    openssl_csr:
+      path: /etc/ssl/certs/apache-server.csr
+      privatekey_path: /etc/ssl/private/apache-server.key
+      
+
+  - name: Generate SSL/TLS certificate
+    openssl_certificate:
+      path: /etc/ssl/certs/apache-server.crt
+      privatekey_path: /etc/ssl/private/apache-server.key
+      csr_path: /etc/ssl/certs/apache-server.csr
+      provider: selfsigned
+      
+
+  - name: Create a directory for SSL certificate
+    file:
+      path: /etc/ssl/certs/project-ssl-certificate
+      state: directory
+      mode: "0700"
+
+  - name: Create a directory for SSL private key
+    file:
+      path: /etc/ssl/certs/project-ssl-private-key
+      state: directory
+      mode: "0700"
+
+  - name: Copy SSL/TLS certificate to new location
+    copy:
+      src: /etc/ssl/certs/apache-server.crt
+      dest: /etc/ssl/certs/project-ssl-certificate/apache-server.crt
+      mode: "0600"
+
+  - name: Copy SSL/TLS private key to new location
+    copy:
+      src: /etc/ssl/private/apache-server.key
+      dest: /etc/ssl/certs/project-ssl-private-key/apache-server.key
+      mode: "0600"
+
+  - name: Restart Apache
+    become: yes
+    systemd:
+      name: httpd
+      state: restarted 
+  
