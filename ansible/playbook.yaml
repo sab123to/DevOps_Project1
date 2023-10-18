@@ -63,9 +63,69 @@
       dest: /etc/ssl/certs/project-ssl-private-key/apache-server.key
       mode: "0600"
 
+  - name: Enable the Apache2 module proxy_fcgi
+    apache2_module:
+      state: present
+      name: proxy_fcgi
+
+  - name: Enable module php8.1-fpm
+    apache2_module:
+      state: present
+      name: php8.1-fpm
+
+  - name: Add php-fpm plugin in Apache2 config file
+    tempalte: 
+      src: templates/000-default.conf.j2
+      dest: /etc/apache2/sites-available/000-default.conf
+
+  - name: Update Ssl Apache2 configuration
+    template: 
+      src: templates/apache2.conf.j2
+      dest: /etc/apache2/apache2.conf
+       
   - name: Restart Apache
     become: yes
     systemd:
       name: httpd
       state: restarted 
   
+- name: Configure PHP
+  hosts: localhost
+  become: true
+
+  tasks:
+  - name: Install PHP
+    apt:
+      pkg:
+       - php 
+       - php-mysql 
+       - php-common 
+       - php-cli 
+       - php-json
+       - php-common 
+       - php-opcache  
+       - php-fpm
+
+
+  - name: Copy and configure php.ini
+    template:
+      src: templates/php.ini.j2
+      dest: /etc/php/8.1/cli/
+
+
+- name: Configure mariadb
+  hosts: localhost
+  become: true
+
+  tasks:
+  - name: install mariadb
+    apt:
+      name:
+        - mariadb-server
+      state: latest
+
+  - name: start mariadb service
+    service:
+      name: mariadb
+      enabled: yes
+      state: started
